@@ -20,24 +20,25 @@ class Pep:
 
 
 def get_month(x):
-
     return{
         1: 'Enero',
-        2: 'Enero',
-        3: 'Enero',
-        4: 'Enero',
-        5: 'Enero',
-        6: 'Enero',
-        7: 'Enero',
-        8: 'Enero',
-        9: 'Enero',
-        10: 'Enero',
-        11: 'Enero',
-        12: 'Enero',
+        2: 'F',
+        3: 'M',
+        4: 'A',
+        5: 'M',
+        6: 'Junio',
+        7: 'Julio',
+        8: 'A',
+        9: 'S',
+        10: 'O',
+        11: 'N',
+        12: 'D',
     }[x]
 
 
 filled_peps = []
+
+
 # LEER LA INFORMACION DE LA SIMULACION DE OIAB
 def leer_simulacion():
     wb = load_workbook('Simulación.xlsx')
@@ -47,9 +48,9 @@ def leer_simulacion():
     peps = []
 
     for row in range(2, max_row):
-        cellPEP = sheet[col + row.__str__()].value
-        if cellPEP is not None and cellPEP not in peps:
-            peps.append(cellPEP)
+        cell_pep = sheet[col + row.__str__()].value
+        if cell_pep is not None and cell_pep not in peps:
+            peps.append(cell_pep)
 
     for i in peps:
         ingreso_por_recurso_propio = 0
@@ -58,24 +59,24 @@ def leer_simulacion():
         nombre_proyecto = ''
 
         for row in range(2, max_row):
-            cellPEP = col + row.__str__()
+            cell_pep = col + row.__str__()
 
-            if not sheet[cellPEP].value is None and sheet[cellPEP].value == i:
-                cellConcepto = sheet['AK' + row.__str__()].value
-                cellMOB = sheet['AJ' + row.__str__()].value
-                cellNombre = sheet['B' + row.__str__()].value
-                cellValor = sheet['AR' + row.__str__()].value
+            if not sheet[cell_pep].value is None and sheet[cell_pep].value == i:
+                cell_concepto = sheet['AK' + row.__str__()].value
+                cell_mob = sheet['AJ' + row.__str__()].value
+                cell_nombre = sheet['B' + row.__str__()].value
+                cell_valor = sheet['AR' + row.__str__()].value
 
-                if cellConcepto is not None:
-                    if 'INGRESO POR RECURSO PROPIO' in cellConcepto:
-                        ingreso_por_recurso_propio = ingreso_por_recurso_propio + cellValor
-                    if 'COSTE POR RECURSO PROPIO' in cellConcepto:
-                        coste_por_recurso_propio = coste_por_recurso_propio + cellValor
-                if cellMOB is not None:
-                    if 'MOB-' in cellMOB:
-                        mob = mob + cellValor
-                if cellNombre is not None:
-                    nombre_proyecto = cellNombre
+                if cell_concepto is not None:
+                    if 'INGRESO POR RECURSO PROPIO' in cell_concepto:
+                        ingreso_por_recurso_propio = ingreso_por_recurso_propio + cell_valor
+                    if 'COSTE POR RECURSO PROPIO' in cell_concepto:
+                        coste_por_recurso_propio = coste_por_recurso_propio + cell_valor
+                if cell_mob is not None:
+                    if 'MOB-' in cell_mob:
+                        mob = mob + cell_valor
+                if cell_nombre is not None:
+                    nombre_proyecto = cell_nombre
 
         p = Pep(i, ingreso_por_recurso_propio, coste_por_recurso_propio, mob, nombre_proyecto)
         filled_peps.append(p)
@@ -86,17 +87,18 @@ def grabar_frp():
     # recorrer los xlsx
     for filename in glob.glob(os.path.join('*.xlsx')):
         if 'FRP' in filename:
+            for p in filled_peps:
+                if p.pep in filename:
+                    print("ok!", p.pep)
+
             if 'D-01350.1.1.1' in filename:
                 print("reca")
                 wb = load_workbook(filename)
                 sheet = wb.active
-                if 'D-01350.1.1.1' in sheet['D79'].value: #comprobacion rdundante
-                    print ('ok')
 
                 for f in filled_peps:
                     if f.pep == 'D-01350.1.1.1':
-                        print(get_month(datetime.now().month))
-                        #sheet['F26'].value = get_month(datetime.now().month)
+                        print(get_month(datetime.datetime.now().month))
 
             if 'D-01362.1.1.1' in filename:
                 print("contsem")
