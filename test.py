@@ -9,3 +9,5 @@ currentMonth = datetime.now().month
 currentYear = datetime.now().year
 
 print(currentMonth)
+f= 'asdD-1234567890'
+print(f[f.find('D-'):10])
