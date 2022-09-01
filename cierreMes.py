@@ -83,10 +83,14 @@ def grabar_frp():
                             except TypeError: # Falla si hay ceros en la multiplicacion
                                 pass
 
-                        if round(suma_mano_obra, 0) == round(current_p.coste, 0):  # Comprobamos que los costes coinciden
+                        if round(suma_mano_obra, 0) == round(current_p.coste, 0):  # Comprobamos que costes coinciden
                             sheet[f'{U.get_current_month_column()}47'].value = current_p.mob
                             sheet[f'{U.get_current_month_column()}52'].value = current_p.ingreso
 
+                    costes = suma_mano_obra + current_p.mob
+                    ingreso_mob = costes / (1-sheet[f'{U.get_current_month_column()}50'].value)
+                    reg = round(ingreso_mob - current_p.ingreso, 2)
+                    print(f'REGULARIZAR: ', {reg})
                     wb.save(filename)
                     break
 
