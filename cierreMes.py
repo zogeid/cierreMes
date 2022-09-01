@@ -2,67 +2,12 @@ import glob
 import os
 import datetime
 from openpyxl import load_workbook
+import pandas as pd
+from Pep import Pep
+import Utils as U
 
 
-class Pep:
-    def __init__(self, pep, ingreso, coste, mob, nombre):
-        self.pep = pep
-        self.coste = coste
-        self.mob = mob
-        self.ingreso = ingreso
-        self.nombre = nombre
-
-    def __repr__(self):
-        print('PEP: ', self.pep, self.nombre)
-        print('INGRESO_POR_RECURSO_PROPIO: ', self.ingreso)
-        print('COSTE_POR_RECURSO_PROPIO: ', self.coste)
-        print('MOB: ', self.mob, '\n')
-
-
-# devuelve el mes actual
-def get_current_month():
-    return 'Mayo'
-    # return{
-    #     1: 'Enero',
-    #     2: 'Febrero',
-    #     3: 'Marzo',
-    #     4: 'Abril',
-    #     5: 'Mayo',
-    #     6: 'Junio',
-    #     7: 'Julio',
-    #     8: 'Agosto',
-    #     9: 'Septiembre',
-    #     10: 'Octubre',
-    #     11: 'Noviembre',
-    #     12: 'Diciembre',
-    # }[datetime.datetime.now().month]
-
-
-# devuelve la columna del mes actual
-def get_current_month_column():
-    return 'H'
-    # return{
-    #     1: 'D',
-    #     2: 'E',
-    #     3: 'F',
-    #     4: 'G',
-    #     5: 'H',
-    #     6: 'I',
-    #     7: 'J',
-    #     8: 'K',
-    #     9: 'L',
-    #     10: 'M',
-    #     11: 'N',
-    #     12: 'O',
-    # }[datetime.datetime.now().month]
-
-
-# devuelve el año actual
-def get_current_year():
-    return datetime.datetime.now().year
-
-
-filled_peps = []
+filled_peps = {}
 
 
 # LEER LA INFORMACION DE LA SIMULACION DE OIAB
@@ -109,7 +54,7 @@ def leer_simulacion():
                     nombre_proyecto = cell_nombre
 
         p = Pep(i, ingreso_por_recurso_propio, coste_por_recurso_propio, mob, nombre_proyecto)
-        filled_peps.append(p)
+        filled_peps[p.pep] = p
 
 
 # GRABAR INFORMACION EN LOS FRP'S
@@ -120,31 +65,32 @@ def grabar_frp():
     for filename in gen:
         filename_pep = filename[filename.find('D-'):28]
         for p in filled_peps:
-            if p.pep == filename_pep:
-                if p.pep == 'D-01350.1.1.1':
+            current_p = filled_peps[p]
+            if current_p.pep == filename_pep:
+                if current_p.pep == 'D-01350.1.1.1':
                     print("reca")
                     wb = load_workbook(filename)
                     sheet = wb.active
-                    if get_current_year() == 2021:  # row2
-                        sheet['F2'].value = get_current_month()
-                    elif get_current_year() == 2022:  # row26
-                        sheet['F26'].value = get_current_month()
+                    if U.get_current_year() == 2021:  # row2
+                        sheet['F2'].value = U.get_current_month()
+                    elif U.get_current_year() == 2022:  # row26
+                        sheet['F26'].value = U.get_current_month()
 
                         suma_mano_obra = 0
-                        for i in range(29, 36):
+                        for i in range(29, 42): # IMPORTANT! Si se añaden más perfiles/tarifas nuevas comprobar el rango
                             try:
-                                suma_mano_obra = suma_mano_obra + (sheet[f'C{i}'].value * sheet[f'{get_current_month_column()}{i}'].value)
-                            except:
+                                suma_mano_obra = suma_mano_obra + (sheet[f'C{i}'].value * sheet[f'{U.get_current_month_column()}{i}'].value)
+                            except TypeError: # Falla si hay ceros en la multiplicacion
                                 pass
-                        print(sheet['H42'].internal_value)
-                        if round(suma_mano_obra, 0) == round(p.coste, 0):  # Comprobamos que los costes coinciden
-                            sheet[f'{get_current_month_column()}41'].value = p.mob
-                            sheet[f'{get_current_month_column()}46'].value = p.ingreso
+
+                        if round(suma_mano_obra, 0) == round(current_p.coste, 0):  # Comprobamos que los costes coinciden
+                            sheet[f'{U.get_current_month_column()}47'].value = current_p.mob
+                            sheet[f'{U.get_current_month_column()}52'].value = current_p.ingreso
 
                     wb.save(filename)
                     break
 
-                if p.pep == 'D-01362.1.1.1':
+                if current_p.pep == 'D-01362.1.1.1':
                     print("contsem")
                     wb = load_workbook(filename)
                     sheet = wb.active
@@ -152,7 +98,7 @@ def grabar_frp():
                         print ('ok')
                     break
 
-                if p.pep == 'D-10168.1.1.1':
+                if current_p.pep == 'D-10168.1.1.1':
                     print("rgpd")
                     wb = load_workbook(filename)
                     sheet = wb.active
@@ -160,7 +106,7 @@ def grabar_frp():
                         print ('ok')
                     break
 
-                if p.pep == 'D-12330.1.1.1':
+                if current_p.pep == 'D-12330.1.1.1':
                     print("webm")
                     wb = load_workbook(filename)
                     sheet = wb.active
