@@ -1,11 +1,11 @@
+import datetime
 import glob
 import os
-import datetime
-from openpyxl import load_workbook
-import pandas as pd
-from Pep import Pep
-import Utils as U
 
+from openpyxl import load_workbook
+
+import Utils as U
+from Pep import Pep
 
 filled_peps = {}
 
@@ -33,10 +33,10 @@ def leer_simulacion():
         mob = 0
         nombre_proyecto = ''
 
-        for row in range(2, max_row):
+        for row in range(2, max_row+1):
             cell_pep = col + row.__str__()
 
-            if not sheet[cell_pep].value is None and sheet[cell_pep].value == i:
+            if sheet[cell_pep].value is not None and sheet[cell_pep].value == i:
                 cell_concepto = sheet['AK' + row.__str__()].value
                 cell_mob = sheet['AJ' + row.__str__()].value
                 cell_nombre = sheet['B' + row.__str__()].value
@@ -59,66 +59,75 @@ def leer_simulacion():
 
 # GRABAR INFORMACION EN LOS FRP'S
 def grabar_frp():
+    print(f'Grabando FRP de: {U.get_current_month()}\n')
     # recorrer los xlsx
     gen = (f for f in glob.glob(os.path.join('*.xlsx')) if 'FRP' in f)
 
     for filename in gen:
-        filename_pep = filename[filename.find('D-'):28]
-        for p in filled_peps:
-            current_p = filled_peps[p]
-            if current_p.pep == filename_pep:
-                if current_p.pep == 'D-01350.1.1.1':
-                    print("reca")
-                    wb = load_workbook(filename)
-                    sheet = wb.active
-                    if U.get_current_year() == 2021:  # row2
-                        sheet['F2'].value = U.get_current_month()
-                    elif U.get_current_year() == 2022:  # row26
-                        sheet['F26'].value = U.get_current_month()
+        pep = filename[filename.find('D-'):filename.find('D-')+13]
+        current_p = filled_peps[pep]
+        wb = load_workbook(filename)
+        sheet = wb.active
 
-                        suma_mano_obra = 0
-                        for i in range(29, 42): # IMPORTANT! Si se añaden más perfiles/tarifas nuevas comprobar el rango
-                            try:
-                                suma_mano_obra = suma_mano_obra + (sheet[f'C{i}'].value * sheet[f'{U.get_current_month_column()}{i}'].value)
-                            except TypeError: # Falla si hay ceros en la multiplicacion
-                                pass
+        if U.get_current_year() == 2021:  # row2
+            sheet['F2'].value = U.get_current_month()
+        elif U.get_current_year() == 2022:  # row26
+            sheet['F26'].value = U.get_current_month()
 
-                        if round(suma_mano_obra, 0) == round(current_p.coste, 0):  # Comprobamos que costes coinciden
-                            sheet[f'{U.get_current_month_column()}47'].value = current_p.mob
-                            sheet[f'{U.get_current_month_column()}52'].value = current_p.ingreso
+            suma_mano_obra = 0
+            for i in range(29, 42): # IMPORTANT! Si se añaden más perfiles/tarifas nuevas comprobar el rango
+                a = sheet[f'C{i}'].value
+                b = sheet[f'{U.get_current_month_column()}{i}'].value
 
+                if a is not None and b is not None:
+                    try:
+                        a = float(a)
+                        b = float(b)
+                        if a > 0 and b > 0:
+                            suma_mano_obra = suma_mano_obra + (a * b)
+                    except ValueError:
+                        print(f'{current_p.nombre}: Revisa el formato de excel FRP\n')
+
+
+            if round(suma_mano_obra, 0) == round(current_p.coste, 0):  # Comprobamos que costes coinciden
+                sheet[f'{U.get_current_month_column()}47'].value = current_p.mob
+                sheet[f'{U.get_current_month_column()}52'].value = current_p.ingreso
+
+                try:
                     costes = suma_mano_obra + current_p.mob
                     ingreso_mob = costes / (1-sheet[f'{U.get_current_month_column()}50'].value)
                     reg = round(ingreso_mob - current_p.ingreso, 2)
-                    print(f'REGULARIZAR: ', {reg})
-                    wb.save(filename)
+                except TypeError as e:
+                    print(f'Error calculando regularizacion, revisa los datos de {pep}{current_p.nombre}')
                     break
 
-                if current_p.pep == 'D-01362.1.1.1':
-                    print("contsem")
-                    wb = load_workbook(filename)
-                    sheet = wb.active
-                    if 'D-01362.1.1.1' in sheet['C43'].value:
-                        print ('ok')
-                    break
+                filled_peps[pep].cierre_coste = costes
+                filled_peps[pep].cierre_ingreso = ingreso_mob
+                filled_peps[pep].regularizacion = reg
+                filled_peps[pep].__repr__()
+                wb.save(filename)
 
-                if current_p.pep == 'D-10168.1.1.1':
-                    print("rgpd")
-                    wb = load_workbook(filename)
-                    sheet = wb.active
-                    if 'D-10168.1.1.1' in sheet['C43'].value:
-                        print ('ok')
-                    break
+            else:
+                print(f'{pep} {current_p.nombre}: Costes_mano_obra do not match')
 
-                if current_p.pep == 'D-12330.1.1.1':
-                    print("webm")
-                    wb = load_workbook(filename)
-                    sheet = wb.active
-                    if 'D-12330.1.1.1' in sheet['C43'].value:
-                        print ('ok')
-                    break
+
+def generar_informe_cierre():
+    filename = f'{U.get_current_year()}{datetime.datetime.now().month} Cierre.xlsx'
+    wb = load_workbook(filename)
+    sheet = wb.active
+
+    for c in range(4, 10):
+        try:
+            pep = sheet[f'B{c}'].value
+            sheet[f'D{c}'].value = filled_peps[pep].cierre_coste
+            sheet[f'F{c}'].value = filled_peps[pep].cierre_ingreso
+            sheet[f'G{c}'].value = filled_peps[pep].regularizacion
+        except KeyError as e:
+            print(f'Iteration {c} KeyError exception {e}. Under control!')
+    wb.save(filename)
 
 
 leer_simulacion()
 for r in filled_peps: r.__repr__()
 grabar_frp()
+generar_informe_cierre()
