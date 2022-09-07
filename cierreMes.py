@@ -4,7 +4,7 @@ import os
 
 from openpyxl import load_workbook
 
-import Utils as U
+import Utils as u
 from Pep import Pep
 
 filled_peps = {}
@@ -59,7 +59,7 @@ def leer_simulacion():
 
 # GRABAR INFORMACION EN LOS FRP'S
 def grabar_frp():
-    print(f'Grabando FRP de: {U.get_current_month()}\n')
+    print(f'Grabando FRP de: {u.get_current_month()}\n')
     # recorrer los xlsx
     gen = (f for f in glob.glob(os.path.join('*.xlsx')) if 'FRP' in f)
 
@@ -69,15 +69,15 @@ def grabar_frp():
         wb = load_workbook(filename)
         sheet = wb.active
 
-        if U.get_current_year() == 2021:  # row2
-            sheet['F2'].value = U.get_current_month()
-        elif U.get_current_year() == 2022:  # row26
-            sheet['F26'].value = U.get_current_month()
+        if u.get_current_year() == 2021:  # row2
+            sheet['F2'].value = u.get_current_month()
+        elif u.get_current_year() == 2022:  # row26
+            sheet['F26'].value = u.get_current_month()
 
             suma_mano_obra = 0
             for i in range(29, 42): # IMPORTANT! Si se añaden más perfiles/tarifas nuevas comprobar el rango
                 a = sheet[f'C{i}'].value
-                b = sheet[f'{U.get_current_month_column()}{i}'].value
+                b = sheet[f'{u.get_current_month_column()}{i}'].value
 
                 if a is not None and b is not None:
                     try:
@@ -88,14 +88,13 @@ def grabar_frp():
                     except ValueError:
                         print(f'{current_p.nombre}: Revisa el formato de excel FRP\n')
 
-
             if round(suma_mano_obra, 0) == round(current_p.coste, 0):  # Comprobamos que costes coinciden
-                sheet[f'{U.get_current_month_column()}47'].value = current_p.mob
-                sheet[f'{U.get_current_month_column()}52'].value = current_p.ingreso
+                sheet[f'{u.get_current_month_column()}47'].value = current_p.mob
+                sheet[f'{u.get_current_month_column()}52'].value = current_p.ingreso
 
                 try:
                     costes = suma_mano_obra + current_p.mob
-                    ingreso_mob = costes / (1-sheet[f'{U.get_current_month_column()}50'].value)
+                    ingreso_mob = costes / (1 - sheet[f'{u.get_current_month_column()}50'].value)
                     reg = round(ingreso_mob - current_p.ingreso, 2)
                 except TypeError as e:
                     print(f'Error calculando regularizacion, revisa los datos de {pep}{current_p.nombre}')
@@ -112,7 +111,7 @@ def grabar_frp():
 
 
 def generar_informe_cierre():
-    filename = f'{U.get_current_year()}{datetime.datetime.now().month} Cierre.xlsx'
+    filename = f'{u.get_current_year()}{datetime.datetime.now().month} Cierre.xlsx'
     wb = load_workbook(filename)
     sheet = wb.active
 
@@ -128,6 +127,7 @@ def generar_informe_cierre():
 
 
 leer_simulacion()
-for r in filled_peps: r.__repr__()
+for r in filled_peps:
+    r.__repr__()
 grabar_frp()
 generar_informe_cierre()
