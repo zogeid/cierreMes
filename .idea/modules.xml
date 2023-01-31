@@ -2,7 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../Eshop/.idea/Eshop.iml" filepath="$PROJECT_DIR$/../Eshop/.idea/Eshop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../stocks_python/.idea/Stocks.iml" filepath="$PROJECT_DIR$/../stocks_python/.idea/Stocks.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../TaigaV2/.idea/TaigaV2.iml" filepath="$PROJECT_DIR$/../TaigaV2/.idea/TaigaV2.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/cierreMes.iml" filepath="$PROJECT_DIR$/.idea/cierreMes.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../eCommerce/.idea/eCommerce.iml" filepath="$PROJECT_DIR$/../eCommerce/.idea/eCommerce.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../timer/.idea/timer.iml" filepath="$PROJECT_DIR$/../timer/.idea/timer.iml" />
     </modules>
   </component>
 </project>
